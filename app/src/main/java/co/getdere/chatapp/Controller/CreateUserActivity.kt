@@ -15,17 +15,10 @@ class CreateUserActivity : AppCompatActivity() {
     var userAvater = "profileDefault"
     var avatarColor = "[0.5, 0.5, 0.5, 1]"
 
-    lateinit var nameInput: String
-    lateinit var emailInput: String
-    lateinit var passwordInput: String
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_user)
 
-        nameInput = create_user_name_text.text.toString()
-        emailInput = create_email_text.text.toString()
-        passwordInput = create_password_text.text.toString()
 
     }
 
@@ -60,13 +53,17 @@ class CreateUserActivity : AppCompatActivity() {
         avatarColor = "[$savedR, $savedG, $savedB, 1"
     }
 
+
     fun createUserClicked(view: View) {
-        AuthService.registerUser(this, emailInput, passwordInput, { registerSuccess ->
+
+        val email = create_email_text.text.toString()
+        val password = create_password_text.text.toString()
+
+        AuthService.registerUser(this, email, password, { registerSuccess ->
             if (registerSuccess) {
-//                AuthService.loginUser(this, emailInput, passwordInput, { loginSuccess ->
-//                    if (loginSuccess) {
-//                    }
-//                })
+                AuthService.loginUser(this, email, password, { loginSuccess ->
+
+                })
             }
         })
     }
