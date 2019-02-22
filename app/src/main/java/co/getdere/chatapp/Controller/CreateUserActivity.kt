@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.EditText
 import co.getdere.chatapp.R
 import co.getdere.chatapp.Services.AuthService
+import co.getdere.chatapp.Services.UserDataService
 import kotlinx.android.synthetic.main.activity_create_user.*
 import java.util.*
 
@@ -15,10 +16,10 @@ class CreateUserActivity : AppCompatActivity() {
     var userAvater = "profileDefault"
     var avatarColor = "[0.5, 0.5, 0.5, 1]"
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_user)
-
 
     }
 
@@ -55,17 +56,24 @@ class CreateUserActivity : AppCompatActivity() {
 
 
     fun createUserClicked(view: View) {
-
+        val userName = create_user_name_text.text.toString()
         val email = create_email_text.text.toString()
         val password = create_password_text.text.toString()
 
-        AuthService.registerUser(this, email, password, { registerSuccess ->
+        AuthService.registerUser(this, email, password) { registerSuccess ->
             if (registerSuccess) {
-                AuthService.loginUser(this, email, password, { loginSuccess ->
-
-                })
+                AuthService.loginUser(this, email, password) { loginSuccess ->
+                    if (loginSuccess) {
+                        AuthService.createUser(this, userName, email, userAvater, avatarColor){createSuccess -> if (createSuccess){
+                            println(UserDataService.avatarName)
+                            println(UserDataService.avatarColor)
+                            println(UserDataService.name)
+                            finish()
+                        }}
+                    }
+                }
             }
-        })
+        }
     }
 
 }
