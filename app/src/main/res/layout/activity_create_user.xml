@@ -100,4 +100,14 @@
             android:textColor="@android:color/white"
             android:onClick="createUserClicked"
             android:layout_marginBottom="16dp"/>
+    <ProgressBar
+            style="?android:attr/progressBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/create_spinner"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/textView2"
+            app:layout_constraintStart_toEndOf="@+id/create_password_text"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintEnd_toStartOf="@+id/create_password_text"/>
 </android.support.constraint.ConstraintLayout>
