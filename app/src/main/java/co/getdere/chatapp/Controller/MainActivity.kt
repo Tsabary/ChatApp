@@ -1,16 +1,18 @@
 package co.getdere.chatapp.Controller
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.content.LocalBroadcastManager
 import android.support.v4.view.GravityCompat
 import android.support.v7.app.ActionBarDrawerToggle
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewParent
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import co.getdere.chatapp.R
 import co.getdere.chatapp.Services.AuthService
 import co.getdere.chatapp.Services.UserDataService
@@ -34,6 +36,8 @@ class MainActivity : AppCompatActivity() {
         )
         drawer_layout.addDrawerListener(toggle)
         toggle.syncState()
+
+        hideKeyboard()
 
         LocalBroadcastManager.getInstance(this).registerReceiver(
             userDataChangeReceiver, IntentFilter(
@@ -84,10 +88,39 @@ class MainActivity : AppCompatActivity() {
 
     fun addChannelClicked(view: View) {
 
+        if (AuthService.isLoggedIn) {
+            val builder = AlertDialog.Builder(this)
+            val dialogView = layoutInflater.inflate(R.layout.add_channel_dialog, null)
+
+            builder.setView(dialogView)
+                .setPositiveButton("Add", { dialogInterface, I ->
+                    val nameTextView = findViewById<EditText>(R.id.add_channel_name_text)
+                    val descriptionTextView = findViewById<EditText>(R.id.add_channel_description_text)
+
+                    val channelName = nameTextView.text.toString()
+                    val channelDescription = descriptionTextView.text.toString()
+
+                    hideKeyboard()
+                }
+                ).setNegativeButton("Cancel", { dialogInterface, I ->
+
+                    hideKeyboard()
+                })
+                .show()
+        }
+
     }
 
     fun sendMessageBtnClicked(view: View) {
 
+    }
+
+    fun hideKeyboard() {
+        val inputManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+
+        if (inputManager.isAcceptingText) {
+            inputManager.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
+        }
     }
 
 

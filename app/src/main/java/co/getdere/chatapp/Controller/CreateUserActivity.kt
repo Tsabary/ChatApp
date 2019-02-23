@@ -71,17 +71,11 @@ class CreateUserActivity : AppCompatActivity() {
         if (userName.length > 3) {
             if (Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                 enableSpinner(true)
-                AuthService.registerUser(this, email, password) { registerSuccess ->
+                AuthService.registerUser(this, email, password, { registerSuccess ->
                     if (registerSuccess) {
-                        AuthService.loginUser(this, email, password) { loginSuccess ->
+                        AuthService.loginUser(this, email, password, { loginSuccess ->
                             if (loginSuccess) {
-                                AuthService.createUser(
-                                    this,
-                                    userName,
-                                    email,
-                                    userAvater,
-                                    avatarColor
-                                ) { createSuccess ->
+                                AuthService.createUser(this, userName,email,userAvater, avatarColor, { createSuccess ->
                                     if (createSuccess) {
                                         enableSpinner(false)
                                         finish()
@@ -92,15 +86,15 @@ class CreateUserActivity : AppCompatActivity() {
                                     } else {
                                         errorToast()
                                     }
-                                }
+                                })
                             } else {
                                 errorToast()
                             }
-                        }
+                        })
                     } else {
                         errorToast()
                     }
-                }
+                })
             } else {
                 Toast.makeText(this, "Please enter a valid email.", Toast.LENGTH_LONG).show()
             }
