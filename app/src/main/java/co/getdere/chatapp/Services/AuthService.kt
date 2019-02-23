@@ -1,10 +1,10 @@
 package co.getdere.chatapp.Services
 
 import android.content.Context
+import android.content.Intent
+import android.support.v4.content.LocalBroadcastManager
 import android.util.Log
-import co.getdere.chatapp.Utilities.URL_CREATE_USER
-import co.getdere.chatapp.Utilities.URL_LOGIN
-import co.getdere.chatapp.Utilities.URL_REGISTER
+import co.getdere.chatapp.Utilities.*
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
@@ -70,7 +70,7 @@ object AuthService {
             }
 
         }, Response.ErrorListener { error ->
-            Log.d("ERROR", "Could not register user $error")
+            Log.d("ERROR", "Could not login user $error")
             complete(false)
         }) {
             override fun getBodyContentType(): String {
@@ -119,7 +119,7 @@ object AuthService {
                 }
             },
             Response.ErrorListener { error ->
-                Log.d("ERROR", "Could not register user $error")
+                Log.d("ERROR", "Could not create user $error")
                 complete(false)
             }) {
 
@@ -139,6 +139,47 @@ object AuthService {
         }
 
         Volley.newRequestQueue(context).add(createRequest)
+    }
+
+    fun findUserByEmail(context: Context, complete: (Boolean) -> Unit) {
+
+        val findUserRequest =
+            object : JsonObjectRequest(Method.GET, "$URL_GET_USER$userEmail", null, Response.Listener { response ->
+
+                try {
+                    UserDataService.name = response.getString("name")
+                    UserDataService.email = response.getString("email")
+                    UserDataService.avatarName = response.getString("avatarName")
+                    UserDataService.avatarColor = response.getString("avatarColor")
+                    UserDataService.id = response.getString("_id")
+
+                    val userDataChange = Intent(BROADCAST_USER_DATA_CHANGE)
+                    LocalBroadcastManager.getInstance(context).sendBroadcast(userDataChange)
+                    complete(true)
+
+
+                } catch (e: JSONException) {
+                    Log.d("JSON", "EXC:" + e.localizedMessage)
+                }
+
+
+            }, Response.ErrorListener { error ->
+                Log.d("ERROR", "Could not find user")
+                complete(false)
+            }) {
+
+                override fun getBodyContentType(): String {
+                    return "application/json ; charset=utf-8"
+                }
+
+                override fun getHeaders(): MutableMap<String, String> {
+                    val headers = HashMap<String, String>()
+                    headers.put("Authorization", "Bearer $authToken")
+                    return headers
+                }
+            }
+Volley.newRequestQueue(context).add(findUserRequest)
+
     }
 
 }
