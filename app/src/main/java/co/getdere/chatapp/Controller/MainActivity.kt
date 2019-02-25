@@ -1,6 +1,9 @@
 package co.getdere.chatapp.Controller
 
-import android.content.*
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.content.LocalBroadcastManager
@@ -8,20 +11,27 @@ import android.support.v4.view.GravityCompat
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewParent
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.Toast
+import co.getdere.chatapp.Model.Channel
 import co.getdere.chatapp.R
 import co.getdere.chatapp.Services.AuthService
 import co.getdere.chatapp.Services.UserDataService
+import co.getdere.chatapp.Services.messageService
 import co.getdere.chatapp.Utilities.BROADCAST_USER_DATA_CHANGE
+import co.getdere.chatapp.Utilities.SOCKET_URL
+import io.socket.client.IO
+import io.socket.emitter.Emitter
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.nav_header_main.*
 
+
 class MainActivity : AppCompatActivity() {
+
+    val socket = IO.socket(SOCKET_URL)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,14 +47,32 @@ class MainActivity : AppCompatActivity() {
         drawer_layout.addDrawerListener(toggle)
         toggle.syncState()
 
+        socket.connect()
+        socket.on("channelCreated", onNewChannel)
+
         hideKeyboard()
+
+
+    }
+
+    override fun onResume() {
+        super.onResume()
 
         LocalBroadcastManager.getInstance(this).registerReceiver(
             userDataChangeReceiver, IntentFilter(
                 BROADCAST_USER_DATA_CHANGE
             )
         )
+
     }
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+        socket.disconnect()
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(userDataChangeReceiver)
+    }
+
 
     private val userDataChangeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -93,26 +121,45 @@ class MainActivity : AppCompatActivity() {
             val dialogView = layoutInflater.inflate(R.layout.add_channel_dialog, null)
 
             builder.setView(dialogView)
-                .setPositiveButton("Add", { dialogInterface, I ->
-                    val nameTextView = findViewById<EditText>(R.id.add_channel_name_text)
-                    val descriptionTextView = findViewById<EditText>(R.id.add_channel_description_text)
+                .setPositiveButton("Add", { dialogInterface, i ->
+                    val nameTextView = dialogView.findViewById<EditText>(R.id.add_channel_name_text)
+                    val descriptionTextView = dialogView.findViewById<EditText>(R.id.add_channel_description_text)
 
                     val channelName = nameTextView.text.toString()
                     val channelDescription = descriptionTextView.text.toString()
 
-                    hideKeyboard()
+                    socket.emit("newChannel", channelName, channelDescription)
+
                 }
-                ).setNegativeButton("Cancel", { dialogInterface, I ->
+                ).setNegativeButton("Cancel", { dialogInterface, i ->
 
                     hideKeyboard()
                 })
                 .show()
+        } else {
+            Toast.makeText(this, "Please login to open channels", Toast.LENGTH_LONG).show()
         }
 
     }
 
-    fun sendMessageBtnClicked(view: View) {
+    private val onNewChannel = Emitter.Listener { args ->
+        runOnUiThread {
 
+            val channelName = args[0] as String
+            val channelDescription = args[1] as String
+            val channelId = args[2] as String
+
+            val newChannel = Channel(channelName, channelDescription, channelId)
+
+            messageService.channels.add(newChannel)
+            println(channelName)
+            println(channelDescription)
+            println(channelId)
+        }
+    }
+
+    fun sendMessageBtnClicked(view: View) {
+        hideKeyboard()
     }
 
     fun hideKeyboard() {
